@@ -41,6 +41,7 @@ const ENTITY_FIELDS = [
 const DEFAULT_CONFIG = {
   title: "SISTEMA ENERGIA - POWMR HVM12V 2KW",
   capacity_ah: 140,
+  height: "clamp(680px, calc(100dvh - 120px), 920px)",
   animation: true,
   entities: {},
 };
@@ -51,6 +52,7 @@ class CaravanEnergyCard extends HTMLElement {
       type: `custom:${CARD_TAG}`,
       title: DEFAULT_CONFIG.title,
       capacity_ah: DEFAULT_CONFIG.capacity_ah,
+      height: DEFAULT_CONFIG.height,
       animation: true,
       entities: {},
     };
@@ -187,6 +189,7 @@ class CaravanEnergyCard extends HTMLElement {
     const acActive = this._state(e.acActive, "off") === "on";
     const animation = this.config.animation !== false;
     const capacity = Number(this.config.capacity_ah) || DEFAULT_CONFIG.capacity_ah;
+    const cardHeight = this.config.height || DEFAULT_CONFIG.height;
     const now = new Date();
     const sampleSeed = this.samples.length > 2
       ? this.samples
@@ -229,9 +232,11 @@ class CaravanEnergyCard extends HTMLElement {
         }
 
         .dash {
-          min-height: 820px;
+          height: var(--card-height, clamp(680px, calc(100dvh - 120px), 920px));
+          min-height: 0;
           display: grid;
-          grid-template-columns: 215px 1fr;
+          grid-template-columns: clamp(168px, 12vw, 215px) minmax(0, 1fr);
+          overflow: hidden;
         }
 
         .sidebar {
@@ -343,6 +348,8 @@ class CaravanEnergyCard extends HTMLElement {
           display: grid;
           grid-template-rows: 56px 1fr 64px;
           min-width: 0;
+          min-height: 0;
+          overflow: hidden;
         }
 
         .topbar {
@@ -377,12 +384,14 @@ class CaravanEnergyCard extends HTMLElement {
 
         .canvas {
           position: relative;
-          padding: 12px 14px;
+          padding: clamp(8px, 0.75vw, 14px);
           display: grid;
-          grid-template-columns: 260px minmax(420px, 1fr) 280px 340px;
-          grid-template-rows: 315px 180px 176px;
-          gap: 14px;
+          grid-template-columns: minmax(210px, 0.82fr) minmax(330px, 1.4fr) minmax(230px, 0.92fr) minmax(280px, 1.1fr);
+          grid-template-rows: minmax(250px, 1.55fr) minmax(145px, 0.86fr) minmax(135px, 0.82fr);
+          gap: clamp(8px, 0.75vw, 14px);
           min-width: 0;
+          min-height: 0;
+          overflow: hidden;
         }
 
         .card {
@@ -394,6 +403,7 @@ class CaravanEnergyCard extends HTMLElement {
             var(--panel);
           box-shadow: inset 0 0 24px rgba(0, 162, 255, 0.06);
           overflow: hidden;
+          min-height: 0;
         }
 
         .card::after {
@@ -409,7 +419,7 @@ class CaravanEnergyCard extends HTMLElement {
         }
 
         .card-title {
-          height: 36px;
+          height: clamp(31px, 3.8vh, 36px);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -428,7 +438,7 @@ class CaravanEnergyCard extends HTMLElement {
         .metric {
           display: grid;
           gap: 2px;
-          padding: 8px 0;
+          padding: clamp(5px, 0.7vh, 8px) 0;
           border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
@@ -440,7 +450,7 @@ class CaravanEnergyCard extends HTMLElement {
 
         .metric strong {
           color: var(--blue);
-          font-size: 21px;
+          font-size: clamp(17px, 1.35vw, 21px);
           font-weight: 800;
           line-height: 1.1;
           text-shadow: 0 0 12px rgba(0, 162, 255, 0.35);
@@ -453,18 +463,19 @@ class CaravanEnergyCard extends HTMLElement {
         .source-card {
           display: grid;
           grid-template-columns: 1fr 95px;
+          min-height: 0;
         }
 
         .source-art {
           position: relative;
-          min-height: 235px;
+          min-height: 0;
           display: grid;
           place-items: center;
         }
 
         .tower {
-          width: 90px;
-          height: 178px;
+          width: clamp(68px, 5.2vw, 90px);
+          height: clamp(132px, 10.6vw, 178px);
           position: relative;
           opacity: 0.9;
           filter: drop-shadow(0 0 16px rgba(120, 200, 255, 0.22));
@@ -483,8 +494,8 @@ class CaravanEnergyCard extends HTMLElement {
         }
 
         .solar-panel {
-          width: 126px;
-          height: 86px;
+          width: clamp(104px, 7.6vw, 126px);
+          height: clamp(72px, 5.2vw, 86px);
           transform: perspective(320px) rotateX(56deg) rotateZ(7deg);
           background:
             linear-gradient(90deg, rgba(255,255,255,.18) 1px, transparent 1px),
@@ -507,7 +518,7 @@ class CaravanEnergyCard extends HTMLElement {
         }
 
         .source-metrics {
-          padding: 44px 16px 0 0;
+          padding: clamp(28px, 4.2vh, 44px) 16px 0 0;
           z-index: 1;
         }
 
@@ -540,20 +551,21 @@ class CaravanEnergyCard extends HTMLElement {
         .inverter {
           grid-column: 2;
           grid-row: 1;
-          width: min(380px, 100%);
+          width: min(100%, 420px);
           justify-self: center;
         }
 
         .inverter-body {
           position: relative;
-          height: 225px;
+          height: calc(100% - clamp(31px, 3.8vh, 36px));
+          min-height: 200px;
           display: grid;
           place-items: center;
         }
 
         .inverter-box {
-          width: 220px;
-          height: 228px;
+          width: clamp(178px, 13.6vw, 220px);
+          height: clamp(184px, 14vw, 228px);
           border-radius: 9px;
           background:
             linear-gradient(180deg, #343638 0 73%, #ff741e 73% 100%);
@@ -651,7 +663,8 @@ class CaravanEnergyCard extends HTMLElement {
         .caravan-body {
           display: grid;
           grid-template-columns: 1fr 92px;
-          height: 278px;
+          height: calc(100% - clamp(31px, 3.8vh, 36px));
+          min-height: 0;
         }
 
         .caravan-img {
@@ -661,8 +674,8 @@ class CaravanEnergyCard extends HTMLElement {
         }
 
         .caravan-img img {
-          max-width: 170px;
-          max-height: 145px;
+          max-width: min(170px, 92%);
+          max-height: min(145px, 70%);
           object-fit: contain;
           filter: drop-shadow(0 12px 18px rgba(0,0,0,.58));
         }
@@ -679,7 +692,7 @@ class CaravanEnergyCard extends HTMLElement {
         .battery-card {
           grid-column: 2 / span 2;
           grid-row: 2;
-          width: min(460px, 100%);
+          width: min(100%, 520px);
           justify-self: center;
         }
 
@@ -688,13 +701,14 @@ class CaravanEnergyCard extends HTMLElement {
           display: grid;
           grid-template-columns: 95px 1fr 98px;
           align-items: center;
-          min-height: 132px;
+          min-height: 0;
+          height: calc(100% - clamp(31px, 3.8vh, 36px));
           padding: 10px 18px 12px;
         }
 
         .battery-pack {
           position: relative;
-          height: 82px;
+          height: clamp(66px, 7.2vh, 82px);
           border-radius: 8px;
           border: 2px solid rgba(230, 245, 255, 0.42);
           background: linear-gradient(180deg, #222, #050708);
@@ -717,7 +731,7 @@ class CaravanEnergyCard extends HTMLElement {
           inset: 0;
           display: grid;
           place-items: center;
-          font-size: 36px;
+          font-size: clamp(28px, 2.5vw, 36px);
           font-weight: 900;
           color: #f6fff6;
           text-shadow: 0 0 15px rgba(0,0,0,.7);
@@ -742,8 +756,9 @@ class CaravanEnergyCard extends HTMLElement {
           grid-column: 4;
           grid-row: 1 / span 3;
           display: grid;
-          grid-template-rows: 236px 152px 160px 1fr;
+          grid-template-rows: minmax(180px, 1.15fr) minmax(122px, 0.74fr) minmax(132px, 0.82fr) minmax(140px, 1fr);
           gap: 10px;
+          min-height: 0;
         }
 
         .chart-card,
@@ -761,7 +776,7 @@ class CaravanEnergyCard extends HTMLElement {
 
         .chart svg {
           width: 100%;
-          height: 132px;
+          height: clamp(96px, 12.5vh, 132px);
           overflow: visible;
         }
 
@@ -849,8 +864,9 @@ class CaravanEnergyCard extends HTMLElement {
           grid-column: 1 / span 3;
           grid-row: 3;
           display: grid;
-          grid-template-columns: 240px 240px 1fr 305px;
+          grid-template-columns: minmax(190px, 0.95fr) minmax(190px, 0.95fr) minmax(230px, 1.08fr) minmax(250px, 1.2fr);
           gap: 12px;
+          min-height: 0;
         }
 
         .mini-chart-card,
@@ -973,10 +989,11 @@ class CaravanEnergyCard extends HTMLElement {
           gap: 1px;
           border-top: 1px solid rgba(0, 162, 255, 0.24);
           background: rgba(1, 7, 12, 0.62);
+          min-height: 0;
         }
 
         .foot-item {
-          height: 64px;
+          height: min(64px, 100%);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1006,15 +1023,26 @@ class CaravanEnergyCard extends HTMLElement {
         }
 
         @media (max-width: 1350px) {
+          ha-card {
+            overflow: visible;
+          }
           .dash {
+            height: auto;
+            min-height: 0;
             grid-template-columns: 1fr;
+            overflow: visible;
           }
           .sidebar {
             display: none;
           }
+          .main {
+            grid-template-rows: auto 1fr auto;
+            overflow: visible;
+          }
           .canvas {
             grid-template-columns: 1fr 1fr;
             grid-template-rows: auto;
+            overflow: visible;
           }
           .inverter,
           .caravan,
@@ -1027,8 +1055,16 @@ class CaravanEnergyCard extends HTMLElement {
           }
           .right-rail,
           .bottom-row {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             grid-template-rows: auto;
+          }
+          .inverter-body,
+          .caravan-body,
+          .battery-body {
+            height: auto;
+          }
+          .source-art {
+            min-height: 210px;
           }
           .flow-layer {
             display: none;
@@ -1052,7 +1088,28 @@ class CaravanEnergyCard extends HTMLElement {
             grid-template-columns: 1fr;
           }
           .dash {
-            min-height: auto;
+            height: auto;
+            min-height: 0;
+          }
+          .right-rail,
+          .bottom-row {
+            grid-template-columns: 1fr;
+          }
+          .source-card,
+          .caravan-body,
+          .battery-body,
+          .energy-grid,
+          .temp-grid {
+            grid-template-columns: 1fr;
+          }
+          .source-metrics {
+            padding: 0 16px 16px;
+          }
+          .status-pill {
+            position: relative;
+            left: auto;
+            bottom: auto;
+            margin: 0 12px 12px;
           }
           .footer {
             grid-template-columns: 1fr;
@@ -1061,7 +1118,7 @@ class CaravanEnergyCard extends HTMLElement {
       </style>
 
       <ha-card>
-        <div class="dash ${animation ? "" : "no-animation"}">
+        <div class="dash ${animation ? "" : "no-animation"}" style="--card-height:${this.escape(cardHeight)}">
           <aside class="sidebar">
             <div class="brand">
               <div class="tm">TM<span>MODELS</span></div>
@@ -1443,6 +1500,10 @@ class CaravanEnergyCardEditor extends HTMLElement {
           <label>
             Capacita batteria Ah
             <input data-root="capacity_ah" type="number" min="1" value="${Number(this.config.capacity_ah) || 140}">
+          </label>
+          <label>
+            Altezza plancia CSS
+            <input data-root="height" value="${this.escape(this.config.height || DEFAULT_CONFIG.height)}">
           </label>
         </div>
 

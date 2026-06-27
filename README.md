@@ -9,7 +9,7 @@ Custom Lovelace card per Home Assistant pensata per monitorare l'energia di una 
 - pannelli per inverter, temperature e priorita di carica/uscita
 - layout completo con sidebar decorativa, topbar, grafici, donut, impostazioni e footer stato
 - editor visuale Lovelace per selezionare le entita senza scrivere YAML a mano
-- layout responsive per tablet e cellulare
+- layout fluido: plancia completa su schermi grandi, adattamento tablet e impilamento su cellulare
 
 ## Installazione via HACS
 
@@ -47,6 +47,7 @@ Configurazione minima:
 type: custom:caravan-energy-card
 title: Sistema Energia Caravan
 capacity_ah: 140
+height: clamp(680px, calc(100dvh - 120px), 920px)
 entities:
   battery_soc: sensor.livello_batteria_knaus
   battery_power: sensor.batteria_knaus_potenza
@@ -55,6 +56,16 @@ entities:
   grid_power: sensor.inverter_cooling_pzem_power
   load_power: sensor.powmr2kw_load_power
 ```
+
+### Layout a tutto schermo
+
+Per ottenere l'effetto plancia grande in Home Assistant, crea una vista Lovelace di tipo `Panel` e inserisci solo questa card nella vista. La card calcola automaticamente l'altezza disponibile; se serve puoi regolarla con:
+
+```yaml
+height: calc(100dvh - 80px)
+```
+
+Su tablet e cellulare la card passa automaticamente a un layout a colonne/righe impilate.
 
 ## Entita supportate
 
