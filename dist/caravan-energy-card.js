@@ -1,4 +1,4 @@
-const CARD_VERSION = "0.2.0";
+const CARD_VERSION = "0.3.0";
 const CARD_TAG = "caravan-energy-card";
 const EDITOR_TAG = "caravan-energy-card-editor";
 
@@ -42,6 +42,7 @@ const DEFAULT_CONFIG = {
   title: "SISTEMA ENERGIA - POWMR HVM12V 2KW",
   capacity_ah: 140,
   height: "clamp(680px, calc(100dvh - 120px), 920px)",
+  flow_threshold_w: 10,
   animation: true,
   entities: {},
 };
@@ -53,6 +54,7 @@ class CaravanEnergyCard extends HTMLElement {
       title: DEFAULT_CONFIG.title,
       capacity_ah: DEFAULT_CONFIG.capacity_ah,
       height: DEFAULT_CONFIG.height,
+      flow_threshold_w: DEFAULT_CONFIG.flow_threshold_w,
       animation: true,
       entities: {},
     };
@@ -72,6 +74,7 @@ class CaravanEnergyCard extends HTMLElement {
       },
     };
     this.samples = [];
+    this.activeView = this.activeView || "overview";
     if (!this.shadowRoot) this.attachShadow({ mode: "open" });
   }
 
@@ -183,13 +186,18 @@ class CaravanEnergyCard extends HTMLElement {
     };
 
     const soc = Math.max(0, Math.min(100, this._num(e.batterySoc, 0)));
+    const pvPower = this._num(e.pvPower, 0);
+    const gridPower = this._num(e.gridPower, 0);
     const batteryPower = this._num(e.batteryPower, 0);
+    const loadPower = this._num(e.loadPower, 0);
     const batteryMode = batteryPower < 0 ? "SCARICA" : batteryPower > 0 ? "CARICA" : "STABILE";
     const alarm = this._state(e.alarm, "off") === "on";
     const acActive = this._state(e.acActive, "off") === "on";
     const animation = this.config.animation !== false;
     const capacity = Number(this.config.capacity_ah) || DEFAULT_CONFIG.capacity_ah;
     const cardHeight = this.config.height || DEFAULT_CONFIG.height;
+    const flowThreshold = Number(this.config.flow_threshold_w) || DEFAULT_CONFIG.flow_threshold_w;
+    const activeView = this.activeView || "overview";
     const now = new Date();
     const sampleSeed = this.samples.length > 2
       ? this.samples
@@ -284,16 +292,22 @@ class CaravanEnergyCard extends HTMLElement {
         }
 
         .nav-item {
+          appearance: none;
+          width: 100%;
           height: 44px;
           border-radius: 7px;
           display: flex;
           align-items: center;
           gap: 12px;
           padding: 0 15px;
+          background: transparent;
           color: #d7e8f5;
           border: 1px solid transparent;
           font-size: 13px;
+          font: inherit;
           letter-spacing: 0.5px;
+          cursor: pointer;
+          text-align: left;
         }
 
         .nav-item.active {
@@ -973,6 +987,8 @@ class CaravanEnergyCard extends HTMLElement {
         .flow.green { stroke: var(--green); color: var(--green); }
         .flow.blue { stroke: var(--blue); color: var(--blue); }
         .flow.orange { stroke: var(--orange); color: var(--orange); }
+        .flow.hidden { display: none; }
+        .flow.reverse { animation-direction: reverse; }
 
         .dash.no-animation .flow {
           animation: none;
@@ -980,6 +996,77 @@ class CaravanEnergyCard extends HTMLElement {
 
         @keyframes flow {
           to { stroke-dashoffset: -56; }
+        }
+
+        .view-panel {
+          position: absolute;
+          inset: clamp(8px, 0.75vw, 14px);
+          z-index: 5;
+          border: 1px solid rgba(0, 162, 255, 0.38);
+          border-radius: 8px;
+          background:
+            linear-gradient(180deg, rgba(0, 85, 150, 0.22), transparent 46px),
+            rgba(2, 10, 16, 0.96);
+          box-shadow: 0 20px 50px rgba(0,0,0,.45), inset 0 0 28px rgba(0, 162, 255, 0.08);
+          padding: 14px;
+          overflow: auto;
+        }
+
+        .view-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          border-bottom: 1px solid rgba(255,255,255,.08);
+          padding-bottom: 12px;
+          margin-bottom: 14px;
+        }
+
+        .view-title {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 20px;
+          font-weight: 800;
+        }
+
+        .view-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 12px;
+        }
+
+        .view-card {
+          border: 1px solid rgba(0, 162, 255, 0.24);
+          border-radius: 8px;
+          background: rgba(4, 18, 27, 0.72);
+          padding: 14px;
+          min-height: 116px;
+        }
+
+        .view-card h4 {
+          margin: 0 0 10px;
+          font-size: 13px;
+          color: #d9ecf8;
+          letter-spacing: 0.4px;
+        }
+
+        .view-value {
+          color: var(--blue);
+          font-size: 28px;
+          font-weight: 900;
+          line-height: 1.05;
+        }
+
+        .view-value.green { color: var(--green); }
+        .view-value.orange { color: var(--orange); }
+        .view-value.red { color: var(--red); }
+
+        .view-entity {
+          color: var(--muted);
+          font-size: 11px;
+          margin-top: 6px;
+          word-break: break-all;
         }
 
         .footer {
@@ -1069,6 +1156,13 @@ class CaravanEnergyCard extends HTMLElement {
           .flow-layer {
             display: none;
           }
+          .view-panel {
+            position: relative;
+            inset: auto;
+          }
+          .view-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
           .footer {
             grid-template-columns: repeat(2, 1fr);
           }
@@ -1114,6 +1208,13 @@ class CaravanEnergyCard extends HTMLElement {
           .footer {
             grid-template-columns: 1fr;
           }
+          .view-head {
+            align-items: flex-start;
+            flex-direction: column;
+          }
+          .view-grid {
+            grid-template-columns: 1fr;
+          }
         }
       </style>
 
@@ -1125,14 +1226,14 @@ class CaravanEnergyCard extends HTMLElement {
               <small>ENERGY SYSTEM</small>
             </div>
             <nav class="nav">
-              ${this._nav("mdi:home-outline", "PANORAMICA", true)}
-              ${this._nav("mdi:lightning-bolt-outline", "ENERGIA")}
-              ${this._nav("mdi:battery-high", "BATTERIA")}
-              ${this._nav("mdi:caravan", "CARAVAN")}
-              ${this._nav("mdi:thermometer", "TEMPERATURE")}
-              ${this._nav("mdi:cog-outline", "IMPOSTAZIONI")}
-              ${this._nav("mdi:bell-outline", "ALLARMI")}
-              ${this._nav("mdi:file-document-outline", "LOG SISTEMA")}
+              ${this._nav("overview", "mdi:home-outline", "PANORAMICA", activeView)}
+              ${this._nav("energy", "mdi:lightning-bolt-outline", "ENERGIA", activeView)}
+              ${this._nav("battery", "mdi:battery-high", "BATTERIA", activeView)}
+              ${this._nav("caravan", "mdi:caravan", "CARAVAN", activeView)}
+              ${this._nav("temperatures", "mdi:thermometer", "TEMPERATURE", activeView)}
+              ${this._nav("settings", "mdi:cog-outline", "IMPOSTAZIONI", activeView)}
+              ${this._nav("alarms", "mdi:bell-outline", "ALLARMI", activeView)}
+              ${this._nav("log", "mdi:file-document-outline", "LOG SISTEMA", activeView)}
             </nav>
             <div class="side-box">
               <div class="side-title">STATO SISTEMA</div>
@@ -1158,10 +1259,10 @@ class CaravanEnergyCard extends HTMLElement {
 
             <section class="canvas">
               <svg class="flow-layer" viewBox="0 0 1220 700" preserveAspectRatio="none">
-                <path class="flow green" d="M190 112 H385" />
-                <path class="flow blue" d="M190 332 H330 V240 H420" />
-                <path class="flow blue" d="M710 110 H830" />
-                <path class="flow orange" d="M565 295 V370" />
+                <path class="flow green ${this._flowClass(Math.abs(gridPower) >= flowThreshold && acActive, gridPower < -flowThreshold)}" d="M190 112 H385" />
+                <path class="flow blue ${this._flowClass(pvPower >= flowThreshold)}" d="M190 332 H330 V240 H420" />
+                <path class="flow blue ${this._flowClass(Math.abs(loadPower) >= flowThreshold, loadPower < -flowThreshold)}" d="M710 110 H830" />
+                <path class="flow orange ${this._flowClass(Math.abs(batteryPower) >= flowThreshold, batteryPower < -flowThreshold)}" d="M565 295 V370" />
               </svg>
 
               ${this._sourceCard("Rete AC", "mdi:transmission-tower", "tower", [
@@ -1333,6 +1434,7 @@ class CaravanEnergyCard extends HTMLElement {
                   </div>
                 </section>
               </section>
+              ${activeView === "overview" ? "" : this._detailView(activeView, e, { soc, pvPower, gridPower, batteryPower, loadPower, batteryMode, alarm, acActive, flowThreshold })}
             </section>
 
             <footer class="footer">
@@ -1349,10 +1451,142 @@ class CaravanEnergyCard extends HTMLElement {
         </div>
       </ha-card>
     `;
+
+    this.shadowRoot.querySelectorAll(".nav-item").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        this.activeView = event.currentTarget.dataset.view || "overview";
+        this._render();
+      });
+    });
   }
 
-  _nav(icon, label, active = false) {
-    return `<div class="nav-item ${active ? "active" : ""}"><ha-icon icon="${icon}"></ha-icon><span>${label}</span></div>`;
+  _nav(view, icon, label, activeView) {
+    const active = view === activeView;
+    return `<button class="nav-item ${active ? "active" : ""}" data-view="${view}" type="button"><ha-icon icon="${icon}"></ha-icon><span>${label}</span></button>`;
+  }
+
+  _flowClass(active, reverse = false) {
+    return `${active ? "" : "hidden"} ${reverse ? "reverse" : ""}`;
+  }
+
+  _detailView(view, e, data) {
+    const views = {
+      energy: {
+        icon: "mdi:lightning-bolt-outline",
+        title: "Energia",
+        subtitle: `Soglia flussi: ${data.flowThreshold} W`,
+        cards: [
+          ["Fotovoltaico", this._fmt(e.pvPower, 0), e.pvPower, data.pvPower >= data.flowThreshold ? "green" : ""],
+          ["Rete AC", this._fmt(e.gridPower, 0), e.gridPower, Math.abs(data.gridPower) >= data.flowThreshold ? "green" : ""],
+          ["Caravan / uscita", this._fmt(e.loadPower, 0), e.loadPower, Math.abs(data.loadPower) >= data.flowThreshold ? "green" : ""],
+          ["Batteria", this._fmt(e.batteryPower, 0), e.batteryPower, data.batteryPower < 0 ? "orange" : "green"],
+          ["FV oggi", this._fmt(e.pvEnergy, 2), e.pvEnergy],
+          ["Rete oggi", this._fmt(e.gridEnergy, 2), e.gridEnergy],
+        ],
+      },
+      battery: {
+        icon: "mdi:battery-high",
+        title: "Batteria",
+        subtitle: data.batteryMode,
+        cards: [
+          ["Stato carica", `${data.soc.toFixed(0)}%`, e.batterySoc, data.soc < 20 ? "red" : "green"],
+          ["Tensione", this._fmt(e.batteryVoltage, 1), e.batteryVoltage],
+          ["Corrente", this._fmt(e.batteryCurrent, 1), e.batteryCurrent, data.batteryPower < 0 ? "orange" : "green"],
+          ["Potenza", this._fmt(e.batteryPower, 0), e.batteryPower, data.batteryPower < 0 ? "orange" : "green"],
+          ["Temperatura", this._fmt(e.batteryTemp, 1), e.batteryTemp],
+          ["Autonomia residua", this._text(e.batteryRuntime), e.batteryRuntime],
+          ["Cicli", this._state(e.batteryCycles), e.batteryCycles],
+          ["Capacita residua", this._fmt(e.batteryEnergy, 1), e.batteryEnergy],
+        ],
+      },
+      caravan: {
+        icon: "mdi:caravan",
+        title: "Caravan",
+        subtitle: Math.abs(data.loadPower) >= data.flowThreshold ? "Uscita attiva" : "Uscita senza carico rilevante",
+        cards: [
+          ["Potenza uscita", this._fmt(e.loadPower, 0), e.loadPower, Math.abs(data.loadPower) >= data.flowThreshold ? "green" : ""],
+          ["Percentuale carico", this._fmt(e.loadPercent, 0), e.loadPercent],
+          ["Tensione uscita", this._fmt(e.loadVoltage, 0), e.loadVoltage],
+          ["Frequenza uscita", this._fmt(e.loadFrequency, 1), e.loadFrequency],
+          ["Priorita uscita", this._text(e.outputPriority), e.outputPriority],
+          ["Rete AC", data.acActive ? "ON GRID" : "OFF GRID", e.acActive, data.acActive ? "green" : "orange"],
+        ],
+      },
+      temperatures: {
+        icon: "mdi:thermometer",
+        title: "Temperature",
+        subtitle: "Sensori caravan e inverter",
+        cards: [
+          ["Interno", this._fmt(e.internalTemp, 1), e.internalTemp],
+          ["Esterno", this._fmt(e.externalTemp, 1), e.externalTemp],
+          ["Batteria servizi", this._fmt(e.batteryServiceTemp, 1), e.batteryServiceTemp],
+          ["Vano tecnico", this._fmt(e.bayTemp, 1), e.bayTemp],
+          ["MPPT", this._fmt(e.mpptTemp, 1), e.mpptTemp],
+          ["Inverter 220V", this._fmt(e.inverterTemp, 1), e.inverterTemp],
+          ["Batteria", this._fmt(e.batteryTemp, 1), e.batteryTemp],
+        ],
+      },
+      settings: {
+        icon: "mdi:cog-outline",
+        title: "Impostazioni",
+        subtitle: "Stati configurabili dell'inverter",
+        cards: [
+          ["Priorita uscita", this._text(e.outputPriority), e.outputPriority],
+          ["Priorita carica", this._text(e.chargerPriority), e.chargerPriority],
+          ["Corrente carica rete", this._text(e.utilityCurrent), e.utilityCurrent],
+          ["Corrente massima carica", this._fmt(e.maxChargeCurrent, 0), e.maxChargeCurrent],
+          ["Animazioni flussi", this.config.animation === false ? "Disattivate" : "Attive", "animation"],
+          ["Soglia flussi", `${data.flowThreshold} W`, "flow_threshold_w"],
+        ],
+      },
+      alarms: {
+        icon: "mdi:bell-outline",
+        title: "Allarmi",
+        subtitle: data.alarm ? "Allarme attivo" : "Nessun allarme attivo",
+        cards: [
+          ["Stato allarme", data.alarm ? "ATTIVO" : "NESSUNO", e.alarm, data.alarm ? "red" : "green"],
+          ["Stato inverter", data.alarm ? "ALLARME" : "NORMALE", e.alarm, data.alarm ? "red" : "green"],
+          ["Rete AC", data.acActive ? "Presente" : "Assente", e.acActive, data.acActive ? "green" : "orange"],
+          ["Batteria", data.batteryMode, e.batteryPower, data.batteryPower < 0 ? "orange" : "green"],
+        ],
+      },
+      log: {
+        icon: "mdi:file-document-outline",
+        title: "Log Sistema",
+        subtitle: "Ultimi campioni raccolti dalla card",
+        cards: [
+          ["Campioni grafico", String(this.samples.length), "internal.samples"],
+          ["Ultimo FV", this._fmt(e.pvPower, 0), e.pvPower],
+          ["Ultima rete", this._fmt(e.gridPower, 0), e.gridPower],
+          ["Ultima batteria", this._fmt(e.batteryPower, 0), e.batteryPower],
+          ["Ultimo carico", this._fmt(e.loadPower, 0), e.loadPower],
+          ["Versione card", CARD_VERSION, "caravan-energy-card"],
+        ],
+      },
+    };
+
+    const detail = views[view] || views.energy;
+    return `
+      <section class="view-panel">
+        <div class="view-head">
+          <div class="view-title"><ha-icon icon="${detail.icon}"></ha-icon>${detail.title}</div>
+          <div class="side-title">${detail.subtitle}</div>
+        </div>
+        <div class="view-grid">
+          ${detail.cards.map(([label, value, entity, tone]) => this._viewCard(label, value, entity, tone)).join("")}
+        </div>
+      </section>
+    `;
+  }
+
+  _viewCard(label, value, entity, tone = "") {
+    return `
+      <div class="view-card">
+        <h4>${label}</h4>
+        <div class="view-value ${tone}">${value}</div>
+        <div class="view-entity">${entity}</div>
+      </div>
+    `;
   }
 
   _metric(label, value, tone = "") {
@@ -1420,7 +1654,7 @@ class CaravanEnergyCardEditor extends HTMLElement {
   }
 
   updateRootValue(key, value) {
-    const parsed = key === "capacity_ah" ? Number(value) : value;
+    const parsed = ["capacity_ah", "flow_threshold_w"].includes(key) ? Number(value) : value;
     this.config = { ...this.config, [key]: parsed };
     this.emitConfigChanged();
   }
@@ -1504,6 +1738,10 @@ class CaravanEnergyCardEditor extends HTMLElement {
           <label>
             Altezza plancia CSS
             <input data-root="height" value="${this.escape(this.config.height || DEFAULT_CONFIG.height)}">
+          </label>
+          <label>
+            Soglia flussi W
+            <input data-root="flow_threshold_w" type="number" min="0" value="${Number(this.config.flow_threshold_w) || DEFAULT_CONFIG.flow_threshold_w}">
           </label>
         </div>
 

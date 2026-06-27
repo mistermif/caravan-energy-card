@@ -2,6 +2,7 @@ type: custom:caravan-energy-card
 title: Sistema Energia - POWMR HVM12V 2KW
 capacity_ah: 140
 height: clamp(680px, calc(100dvh - 120px), 920px)
+flow_threshold_w: 10
 max_current: 50
 entities:
   battery_soc: sensor.livello_batteria_knaus
