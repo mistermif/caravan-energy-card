@@ -1,0 +1,33 @@
+type: custom:caravan-energy-card
+title: Sistema Energia - POWMR HVM12V 2KW
+capacity_ah: 140
+max_current: 50
+entities:
+  battery_soc: sensor.livello_batteria_knaus
+  battery_voltage: sensor.batteria_knaus_tensione
+  battery_current: sensor.batteria_knaus_corrente
+  battery_power: sensor.batteria_knaus_potenza
+  battery_temp: sensor.batteria_knaus_temperatura
+  battery_runtime: sensor.batteria_knaus_runtime
+  battery_cycles: sensor.batteria_knaus_cycles
+  battery_energy: sensor.batteria_knaus_energia_immagazzinata
+  grid_voltage: sensor.inverter_cooling_pzem_voltage
+  grid_power: sensor.inverter_cooling_pzem_power
+  grid_frequency: sensor.inverter_cooling_pzem_frequency
+  grid_energy: sensor.pzem_day
+  pv_voltage: sensor.powmr2kw_pv_voltage
+  pv_power: sensor.powmr2kw_pv_power
+  pv_energy: sensor.produzione_fv_giornaliera
+  load_voltage: sensor.powmr2kw_load_voltage
+  load_power: sensor.powmr2kw_load_power
+  load_frequency: sensor.powmr2kw_load_frequency
+  load_percent: sensor.powmr2kw_load_percent
+  alarm: binary_sensor.powmr2kw_alarm
+  ac_active: binary_sensor.powmr2kw_ac_active
+  mppt_temp: sensor.inverter_cooling_temp_mppt
+  inverter_temp: sensor.inverter_cooling_temp_220
+  bay_temp: sensor.inverter_cooling_temp_vano_tecnico
+  internal_temp: sensor.caravan_sensor_interno_temperatura
+  external_temp: sensor.caravan_sensor_esterno_temperatura
+  output_priority: select.powmr2kw_output_source_priority
+  charger_priority: select.powmr2kw_charger_source_priority
