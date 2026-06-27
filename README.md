@@ -22,7 +22,7 @@ Quando il progetto sara pubblicato su GitHub:
 
 ## Installazione manuale
 
-Copia `dist/caravan-energy-card.js` in:
+Copia `caravan-energy-card.js` in:
 
 ```text
 /config/www/community/caravan-energy-card/caravan-energy-card.js
