@@ -1,5 +1,7 @@
 # Caravan Energy Card
 
+![Caravan Energy Card preview](assets/dashboard-preview.png)
+
 Custom Lovelace card per Home Assistant pensata per monitorare l'energia di una caravan/camper con una plancia cockpit scura, ispirata ai sistemi industriali/nautici:
 
 - flussi animati tra rete AC, fotovoltaico, inverter, batteria e carichi
