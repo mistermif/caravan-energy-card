@@ -1248,7 +1248,7 @@ class CaravanEnergyCard extends HTMLElement {
 
           <main class="main">
             <header class="topbar">
-              <div class="title">${this.config.title}</div>
+              <div class="title">${this.escape(this.config.title)}</div>
               <div class="top-meta">
                 <span><ha-icon icon="mdi:thermometer"></ha-icon> ${this._fmt(e.internalTemp, 1)}</span>
                 <span><ha-icon icon="mdi:calendar-month"></ha-icon> ${now.toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}</span>
@@ -1569,8 +1569,8 @@ class CaravanEnergyCard extends HTMLElement {
     return `
       <section class="view-panel">
         <div class="view-head">
-          <div class="view-title"><ha-icon icon="${detail.icon}"></ha-icon>${detail.title}</div>
-          <div class="side-title">${detail.subtitle}</div>
+          <div class="view-title"><ha-icon icon="${detail.icon}"></ha-icon>${this.escape(detail.title)}</div>
+          <div class="side-title">${this.escape(detail.subtitle)}</div>
         </div>
         <div class="view-grid">
           ${detail.cards.map(([label, value, entity, tone]) => this._viewCard(label, value, entity, tone)).join("")}
@@ -1582,25 +1582,25 @@ class CaravanEnergyCard extends HTMLElement {
   _viewCard(label, value, entity, tone = "") {
     return `
       <div class="view-card">
-        <h4>${label}</h4>
-        <div class="view-value ${tone}">${value}</div>
-        <div class="view-entity">${entity}</div>
+        <h4>${this.escape(label)}</h4>
+        <div class="view-value ${tone}">${this.escape(value)}</div>
+        <div class="view-entity">${this.escape(entity)}</div>
       </div>
     `;
   }
 
   _metric(label, value, tone = "") {
-    return `<div class="metric ${tone}"><small>${label.toUpperCase()}</small><strong>${value}</strong></div>`;
+    return `<div class="metric ${tone}"><small>${this.escape(label).toUpperCase()}</small><strong>${this.escape(value)}</strong></div>`;
   }
 
   _status(label, tone) {
-    return `<div class="status-pill"><small>STATO</small><strong><span class="dot" style="color:var(--${tone});background:var(--${tone})"></span>${label}</strong></div>`;
+    return `<div class="status-pill"><small>STATO</small><strong><span class="dot" style="color:var(--${tone});background:var(--${tone})"></span>${this.escape(label)}</strong></div>`;
   }
 
   _sourceCard(title, icon, artClass, metrics, status, tone) {
     return `
       <section class="card source-card">
-        <div class="card-title" style="grid-column:1 / -1"><ha-icon icon="${icon}"></ha-icon>${title.toUpperCase()}</div>
+        <div class="card-title" style="grid-column:1 / -1"><ha-icon icon="${icon}"></ha-icon>${this.escape(title).toUpperCase()}</div>
         <div class="source-art"><div class="${artClass}"></div></div>
         <div class="source-metrics">
           ${metrics.map(([label, value, metricTone]) => this._metric(label, value, metricTone || "")).join("")}
@@ -1611,19 +1611,29 @@ class CaravanEnergyCard extends HTMLElement {
   }
 
   _row(label, value) {
-    return `<div class="list-row"><span>${label}</span><strong>${value}</strong></div>`;
+    return `<div class="list-row"><span>${this.escape(label)}</span><strong>${this.escape(value)}</strong></div>`;
   }
 
   _donut(label, value, color) {
-    return `<div style="color:${color}"><span class="swatch"></span><span>${label}</span><strong>${value}</strong></div>`;
+    return `<div style="color:${color}"><span class="swatch"></span><span>${this.escape(label)}</span><strong>${this.escape(value)}</strong></div>`;
   }
 
   _energy(icon, label, value) {
-    return `<div class="energy-item"><ha-icon icon="${icon}"></ha-icon><small>${label}</small><strong>${value}</strong></div>`;
+    return `<div class="energy-item"><ha-icon icon="${icon}"></ha-icon><small>${this.escape(label)}</small><strong>${this.escape(value)}</strong></div>`;
   }
 
   _foot(icon, label, value, warn = false) {
-    return `<div class="foot-item"><ha-icon icon="${icon}"></ha-icon><div><small>${label}</small><strong style="color:${warn ? "var(--orange)" : "var(--green)"}">${value}</strong></div></div>`;
+    return `<div class="foot-item"><ha-icon icon="${icon}"></ha-icon><div><small>${this.escape(label)}</small><strong style="color:${warn ? "var(--orange)" : "var(--green)"}">${this.escape(value)}</strong></div></div>`;
+  }
+
+  escape(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;",
+    }[char]));
   }
 }
 

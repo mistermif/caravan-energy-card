@@ -83,6 +83,16 @@ flow_threshold_w: 10
 - `load_power` accende il flusso inverter verso caravan
 - `battery_power` accende il flusso batteria e inverte l'animazione quando la batteria scarica
 
+## Test locale
+
+Prima di pubblicare una modifica puoi eseguire:
+
+```bash
+node scripts/smoke-test.js
+```
+
+Il test carica sia `dist/caravan-energy-card.js` sia `caravan-energy-card.js`, registra il custom element e forza un render con stati Home Assistant simulati.
+
 ## Entita supportate
 
 Le entita si configurano sotto `entities`.
